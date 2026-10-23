@@ -1,6 +1,6 @@
 # 用 AI 精读一篇经典论文：t-SNE (JMLR 2008) 的图表反推、公式验证与参数漂移核查
 
-> **一句话**：以 "Visualizing Data using t-SNE"（van der Maaten & Hinton, JMLR 9 (2008) 2579–2605）为样本，演示一套 **"原文锚定 → 公式反推 → 独立数值验证 → 三方参数对照 → 社区证据链"** 的 AI 论文精读流程。论文 Figure 1 的三幅梯度热图被解析级复现并与原图对照，论文与作者代码、scikit-learn 实现之间的 8 处参数漂移被逐一核对并溯源到具体 issue。
+> **一句话**：以 "Visualizing Data using t-SNE"（van der Maaten & Hinton, JMLR 9 (2008) 2579–2605）为样本，演示一套 **"原文锚定 → 公式反推 → 独立数值验证 → 三方参数对照 → 社区证据链"** 的 AI 论文精读流程。论文 Figure 1 的三幅梯度热图被解析级复现并与原图对照；论文、作者代码与 scikit-learn 实现之间的参数漂移被逐项核对（6 组参数、页码/行号级证据）并溯源到具体 issue。
 
 - 论文（开放获取）：https://www.jmlr.org/papers/volume9/vandermaaten08a/vandermaaten08a.pdf
 - 对照实现：作者官方 Python 代码（lvdmaaten.github.io/tsne）与 scikit-learn 1.9.1（`sklearn.manifold.TSNE`）
