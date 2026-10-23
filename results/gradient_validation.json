@@ -1,0 +1,18 @@
+{
+  "sne:exact": {
+    "max_relative_error": 3.18250258649965e-09,
+    "passes": true
+  },
+  "unisne:exact": {
+    "max_relative_error": 1.035526058460217e-08,
+    "passes": true
+  },
+  "unisne:spring": {
+    "max_relative_error": 9.260653941960369,
+    "passes": false
+  },
+  "tsne:exact": {
+    "max_relative_error": 9.218115517301099e-09,
+    "passes": true
+  }
+}

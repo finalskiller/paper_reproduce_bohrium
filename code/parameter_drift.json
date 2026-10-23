@@ -1,0 +1,44 @@
+{
+  "_description": "三方参数对照:t-SNE 论文(JMLR 2008) / 作者官方 Python 实现(tsne_python.zip 中 tsne.py) / scikit-learn 1.9.1 安装包源码。每行注明证据来源(页码/文件/行号),全部为 2026-10-23 实际核对结果。",
+  "paper": {
+    "_source": "van der Maaten & Hinton, JMLR 9 (2008) 2579-2605; 见 paper_evidence/excerpts/",
+    "optimization": {
+      "early_exaggeration": {"value": "×4, 前 50 次迭代", "source": "p.2588 §3.4: 'we used the early exaggeration method with an exaggeration of 4 for the first 50 iterations'"},
+      "iterations_T": {"value": 1000, "source": "p.2588 §3.4: 'The number of gradient descent iterations T was set 1000'"},
+      "momentum": {"value": "0.5 (t<250), 0.8 (t≥250)", "source": "p.2588 §3.4"},
+      "learning_rate": {"value": "初始 100,按 Jacobs (1988) 自适应", "source": "p.2588 §3.4: 'The learning rate η is initially set to 100 and it is updated after every iteration by means of the adaptive learning rate scheme'"},
+      "init": {"value": "N(0, 1e-4 I)", "source": "p.2587 Algorithm 1: 'sample initial solution Y(0) from N(0, 1e-4 I)'"},
+      "pca_prereduce": {"value": "PCA 降到 30 维", "source": "p.2589 §4.2: 'we start by using PCA to reduce the dimensionality of the data to 30'"}
+    },
+    "mnist_experiment": {
+      "n_samples": {"value": 6000, "source": "p.2588 §4.1: 'we randomly selected 6,000 of the images'"},
+      "perplexity": {"value": 40, "source": "p.2589 Table 1: 't-SNE Perp = 40'"}
+    }
+  },
+  "author_python": {
+    "_source": "lvdmaaten.github.io/tsne/code/tsne_python.zip -> tsne_python/tsne.py (作者官方发布,下载于 2026-10-23)",
+    "early_exaggeration": {"value": "×4, 前 100 次迭代 (iter == 100 时 P = P/4)", "drift_vs_paper": "撤销时机 50 → 100"},
+    "max_iter": {"value": 1000, "drift_vs_paper": "一致"},
+    "initial_momentum": {"value": "0.5, 仅前 20 次迭代", "drift_vs_paper": "切换点 250 → 20"},
+    "final_momentum": {"value": 0.8, "drift_vs_paper": "一致"},
+    "eta": {"value": 500, "drift_vs_paper": "100 → 500(代码梯度少了论文式(5)中的因子 4,学习率相应放大,数值上大体吸收了该差异)"},
+    "init": {"value": "np.random.randn(n, no_dims) 即 N(0, I)", "drift_vs_paper": "论文 N(0, 1e-4 I) → 标准正态,尺度相差 1e4 倍"},
+    "pca_prereduce": {"value": "initial_dims=50", "drift_vs_paper": "30 → 50"},
+    "perplexity_default": {"value": 30, "drift_vs_paper": "论文 MNIST 实验用 40"}
+  },
+  "sklearn_1_9_1": {
+    "_source": "本机安装的 scikit-learn==1.9.1 源码 sklearn/manifold/_t_sne.py(inspect.getsource 核对)",
+    "perplexity_default": {"value": 30, "note": "类签名默认;MNIST 复现实验按论文设 40"},
+    "early_exaggeration": {"value": "12.0, 前 250 次迭代 (_EXPLORATION_MAX_ITER = 250)", "drift_vs_paper": "倍数 4 → 12,时长 50 → 250;12 的取值来自 Kobak & Linderman (2021) 的建议(见 issue #18018 任务清单)"},
+    "learning_rate_default": {"value": "'auto' = max(N / early_exaggeration / 4, 50);N=6000 时为 125", "drift_vs_paper": "形式不同:论文固定初值+Jacobs 自适应;sklearn 是样本量相关的公式;下限 50 与 openTSNE 的 max(200, N/exagg) 也不一致(issuescout 分析发现)"},
+    "momentum": {"value": "0.5 (探索期前 250 次) → 0.8", "drift_vs_paper": "与论文调度一致(切换点同为 250),比作者 Python 代码(切换点 20)更贴近论文"},
+    "max_iter": {"value": 1000, "drift_vs_paper": "一致"},
+    "init": {"value": "默认 'pca'(PC1 标准差重标定为 1e-4,源码注释引用 issue #18018);'random' = 1e-4 * standard_normal", "drift_vs_paper": "random 分支与论文 N(0,1e-4 I) 完全一致;pca 分支是 1.2 版起的社区共识增强,对全局结构更稳"},
+    "gains_adaptive": {"value": "增益 +0.2/-0.8, min_gain=0.01", "drift_vs_paper": "与作者 Python 代码一致(即 Jacobs 自适应的实现),论文未给出细节"},
+    "method": {"value": "默认 barnes_hut, angle=0.5", "drift_vs_paper": "论文(2008)为精确实现;Barnes-Hut 是 van der Maaten (2013/2014) 的加速近似"}
+  },
+  "issue_18018_chain": {
+    "_source": "https://github.com/scikit-learn/scikit-learn/issues/18018 (closed);正文经 web 阅读器抓取存于 issuescout_run/issue_18018_offline_cache.json",
+    "summary": "issue #18018 (2020) 推动了: PCA 初始化重标定 1e-4、learning_rate='auto'、文档改写、perplexity 示例;源码两处注释直接引用该编号;其未完成项指向 Kobak & Linderman (2021) 论文对初始化与 early exaggeration 的进一步建议——sklearn 默认 exaggeration=12 即来自这条后续研究链"
+  }
+}

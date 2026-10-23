@@ -1,0 +1,28 @@
+{
+  "A_paper_flavoured": {
+    "params": {
+      "perplexity": 40,
+      "early_exaggeration": 4,
+      "learning_rate": 100,
+      "init": "random",
+      "random_state": 42
+    },
+    "wall_seconds": 30.9,
+    "kl_divergence_final": 1.5138412714004517,
+    "trustworthiness_k12": 0.9877,
+    "knn1_accuracy_5cv": 0.936
+  },
+  "B_sklearn_defaults": {
+    "params": {
+      "perplexity": 30,
+      "early_exaggeration": 12,
+      "learning_rate": "auto",
+      "init": "pca",
+      "random_state": 42
+    },
+    "wall_seconds": 30.9,
+    "kl_divergence_final": 1.5501009225845337,
+    "trustworthiness_k12": 0.9867,
+    "knn1_accuracy_5cv": 0.941
+  }
+}

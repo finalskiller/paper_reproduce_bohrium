@@ -1,0 +1,49 @@
+{
+  "owner": "scikit-learn",
+  "name": "scikit-learn",
+  "number": 18018,
+  "headSha": "66cbcdb62016239eff0c564875580c51521b29fe",
+  "model": "deepseek-chat",
+  "result": {
+    "summary": "t-SNE 默认参数与文档改进议题：learning_rate=\"auto\"、PCA 初始化重缩放至 1e-4、init=\"pca\" 默认、文档与 perplexity 示例均已落地，仅剩 Kobak & Linderman 论文中关于初始化与 early exaggeration 的建议待评估。",
+    "type": "feature",
+    "root_cause": "需求本质是改进 TSNE 的默认行为与文档：原默认 learning_rate=200 在大样本下收敛不佳，PCA 初始化尺度与随机初始化不一致，类文档对 PCA 预降维的描述有误导性。当前代码已实现：sklearn/manifold/_t_sne.py 中 __init__ 默认 learning_rate=\"auto\"、init=\"pca\"；_fit 中 `if self.learning_rate == \"auto\": self.learning_rate_ = X.shape[0] / self.early_exaggeration / 4; np.maximum(..., 50)`（注释引用 issue #18018）；init==\"pca\" 分支中 `X_embedded = X_embedded / np.std(X_embedded[:, 0]) * 1e-4`（注释引用 issue #18018）；examples/manifold/plot_t_sne_perplexity.py 已存在 perplexity 示例。因此 issue 中勾选的 5 项任务均已完成，剩余未勾选项为对论文建议的进一步评估。",
+    "affected_files": [
+      {
+        "path": "sklearn/manifold/_t_sne.py",
+        "symbol": "TSNE._fit",
+        "reason": "learning_rate=\"auto\" 解析为 n/early_exaggeration/4 且下限 50，PCA 初始化按 PC1 标准差重缩放至 1e-4"
+      },
+      {
+        "path": "sklearn/manifold/_t_sne.py",
+        "symbol": "TSNE.__init__",
+        "reason": "默认值已改为 learning_rate=\"auto\"、init=\"pca\"，参数校验允许 StrOptions({\"auto\"})"
+      },
+      {
+        "path": "sklearn/manifold/tests/test_t_sne.py",
+        "symbol": null,
+        "reason": "包含 learning_rate=\"auto\"、init=\"pca\" 及 precomputed 与 pca 冲突的测试"
+      },
+      {
+        "path": "examples/manifold/plot_t_sne_perplexity.py",
+        "symbol": null,
+        "reason": "新增的 perplexity 参数效果示例，使用 learning_rate=\"auto\""
+      }
+    ],
+    "difficulty": "L2",
+    "approach": [
+      "确认已勾选任务（重缩放、learning_rate=\"auto\"、文档、perplexity 示例、PCA 初始化说明）在 _t_sne.py 与示例中均已实现，无需再改代码",
+      "针对未勾选项，评估 Kobak & Linderman 论文关于初始化与 early_exaggeration 的建议，判断是否需调整 early_exaggeration 默认值或增加文档说明",
+      "若决定采纳，补充 docstring 说明与相应测试；否则在 issue 中记录决策并关闭"
+    ],
+    "risks": [
+      "修改 early_exaggeration 或初始化会改变默认行为，需遵循弃用周期并可能影响既有测试与用户结果",
+      "learning_rate=\"auto\" 的下限 50 与 Fit-SNE/openTSNE 的 max(200, n/early_exaggeration) 不完全一致，需明确文档表述",
+      "PCA 重缩放依赖 PC1 标准差，退化数据（标准差为 0）可能产生数值问题"
+    ],
+    "confidence": 0.85
+  },
+  "tokensIn": 74692,
+  "tokensOut": 1276,
+  "createdAt": 1792743967266
+}

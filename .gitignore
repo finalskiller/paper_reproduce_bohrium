@@ -1,0 +1,12 @@
+# 数据缓存(可按 README 步骤重新下载)
+data_cache/
+# issuescout 的 sklearn 源码快照(约 200MB,按 workflow/run_log.md §E 步骤可重建)
+issuescout_run/repo/
+# 论文 PDF 本地核查用,不入库不分发(获取方式见 README §4.1)
+paper_src/
+# Python
+__pycache__/
+*.pyc
+# 打包产物
+outputs/
+cmeta_tmp.json

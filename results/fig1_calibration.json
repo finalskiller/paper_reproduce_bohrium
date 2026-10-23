@@ -1,0 +1,30 @@
+{
+  "sigma": 1.0,
+  "rho": 0.2222222222222222,
+  "scale": 1.0,
+  "report": {
+    "SNE": {
+      "max_attraction": 18.0,
+      "max_repulsion": -0.42883847592909125,
+      "repulsion_at_dl18_dh18": 7.935356396633808e-70,
+      "att_attraction": 18.0
+    },
+    "UNI-SNE": {
+      "max_attraction": 14.0,
+      "max_repulsion": -4.0,
+      "repulsion_at_dl18_dh18": -4.0,
+      "att_attraction": 14.0
+    },
+    "t-SNE": {
+      "max_attraction": 0.3246740373114108,
+      "max_repulsion": -0.3243944636678201,
+      "repulsion_at_dl18_dh18": -0.00017041420118343195,
+      "att_attraction": 0.055214201183431955
+    },
+    "signatures": {
+      "tsne_repulsion_peak_at_dl": 0.6000000000000001,
+      "tsne_repulsion_bounded": true,
+      "unisne_repulsion_at_dl18": -4.0
+    }
+  }
+}
