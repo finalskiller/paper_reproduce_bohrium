@@ -18,13 +18,17 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 
 EXCLUDE_DIRS = {
     ".git", "outputs", "data_cache", "paper_src", "node_modules",
-    "__pycache__",
+    "__pycache__", "__MACOSX",  # __MACOSX: 作者官方 zip 内的 macOS AppleDouble 垃圾文件
 }
 EXCLUDE_FILES = {
     "build_materials.py",      # 打包脚本本身(仓库中保留,材料包不需要)
     "PUBLISH.md",              # 所有者操作说明
     "提交说明.md",              # 单独写入 zip 根,避免双层
     ".gitignore",
+    # 约 31MB 纯文本数据(作者官方 tsne_python.zip 解包副本),与包内 tsne_python.zip
+    # 内容完全重复,且 fig2a_mnist.py 运行时自行下载数据、不读取该文件;
+    # 240KiB 文本预算装不下,按"去掉重复副本"自材料包排除(公开仓库保留),见提交说明容量条目
+    "mnist2500_X.txt",
 }
 EXCLUDE_PREFIXES = [
     "issuescout_run/repo/",    # sklearn 源码快照(约 200MB,按 run_log §E 可重建)
@@ -71,6 +75,12 @@ SUBMISSION_NOTE = """作品链接：{url}
 - 真实过程日志(含失败与降级路径):workflow/run_log.md;逐条核查记录(原文/AI/判断/实测四区分):
   workflow/verification.md;关键文件哈希:workflow/checksums.txt
 - 知识提取:trace.md
+- 容量说明:author_code/tsne_python/tsne_python/mnist2500_X.txt(约31MB纯文本,作者官方
+  tsne_python.zip 解包所得的数据文件)自材料包排除——它与包内 author_code/tsne_python.zip
+  内容完全重复,且 fig2a_mnist.py 运行时自行按 README §3.2 下载数据、不读取该文件;
+  240KiB 文本预算无法容纳。完整文件在公开仓库同版本同路径可得,其 SHA256 见
+  workflow/checksums.txt;包内另保留 mnist2500_labels.txt 与三份 .npy 嵌入结果,
+  足以核验 Figure 2(a) 实验的输出结论。
 
 来源与贡献：
 - 论文:van der Maaten & Hinton (2008), JMLR 9:2579-2605,开放获取(© 作者,JMLR);
