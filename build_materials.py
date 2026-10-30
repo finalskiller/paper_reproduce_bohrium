@@ -80,7 +80,8 @@ SUBMISSION_NOTE = """作品链接：{url}
   内容完全重复,且 fig2a_mnist.py 运行时自行按 README §3.2 下载数据、不读取该文件;
   240KiB 文本预算无法容纳。完整文件在公开仓库同版本同路径可得,其 SHA256 见
   workflow/checksums.txt;包内另保留 mnist2500_labels.txt 与三份 .npy 嵌入结果,
-  足以核验 Figure 2(a) 实验的输出结论。
+  足以核验 Figure 2(a) 实验的输出结论。打包工具 build_materials.py 与所有者操作说明
+  PUBLISH.md 同样保留于公开仓库、不入材料包(非分享内容,故亦不在 checksums.txt 清单)。
 
 来源与贡献：
 - 论文:van der Maaten & Hinton (2008), JMLR 9:2579-2605,开放获取(© 作者,JMLR);
