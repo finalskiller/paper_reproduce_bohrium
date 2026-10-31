@@ -157,7 +157,9 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 #    见 workflow/run_log.md §E：离线缓存构造 + npm run cli -- analyze 18018 <repo>
 ```
 
-**零网络复现路径（评审环境友好）**：①② 两步不访问网络、不需要任何数据集，是本分享核心结论（Figure 1 反推 + 梯度验证 + §2.3 发现）的完整可复现核心。③ 的输入样本已存为 `author_code/mnist6000_sample.npz`（6000×784 uint8 灰度级 + 标签，0.99MB）：样本子集与原始运行**逐标签核对一致**（6000/6000，顺序敏感），且加载器对原始 float32 输入做到**位级重建**（构建时断言 max diff = 0.0）；在本仓库记录的环境（Python 3.14.7 + scikit-learn 1.9.1 + numpy 2.5.4）离线重跑，六项指标（两配置的 KL / trustworthiness / 1-NN）与 `results/fig2a_metrics.json` 存档**完全一致**（KL 一致到小数点后 16 位）。重建与核验脚本：`code/make_mnist_sample_npz.py`。
+**零网络复现路径（评审环境友好）**：①② 两步不访问网络、不需要任何数据集，是本分享核心结论（Figure 1 反推 + 梯度验证 + §2.3 发现）的完整可复现核心。③ 的输入样本已存为 `author_code/mnist6000_sample.npz`（6000×784 uint8 灰度级 + 标签，0.99MB）：样本子集与原始运行**逐标签核对一致**（6000/6000，顺序敏感），且加载器对原始 float32 输入做到**位级重建**（构建时断言 max diff = 0.0）；离线重跑六项指标（两配置的 KL / trustworthiness / 1-NN）与 `results/fig2a_metrics.json` 存档**完全一致**（KL 一致到小数点后 16 位）。重建与核验脚本：`code/make_mnist_sample_npz.py`。
+
+**干净目录复跑（2026-10-31，真预注册）**：为进一步排除"本机残留状态"的可能，从材料包 zip 解压到全新空目录、进程级禁用网络（socket 拦截器），按**复跑前写定**的判据 C-R1/C-R2/C-R3 执行三步——全部 PASS（C-R2 中重跑 KL 与原始存档逐位一致；C-R3 拦截器计数为 0，即脚本连网络尝试都未发起）。判据、命令与完整输出：`workflow/acceptance_criteria.md` §3、`workflow/clean_replay_20261031.md`（含可重放执行器 `workflow/clean_replay_20261031/run_replay.py` 与原始日志）。各案例的正式化验收判据与判定回放见 `workflow/acceptance_criteria.md`。
 
 **结果检查**：② 中三行 `PASS`（相对误差 < 1e-5）；① 中校准输出 σ=1.0, ρ=0.211, s=1.0 且 SNE/UNI-SNE 的 max/min 与 §2.2 表一致；③ 的两幅嵌入图应呈现论文级结构（10 个数字簇清晰分离、1/7 与 3/5/8 的邻近关系）；参数对照打开 `code/parameter_drift.json` 与本 README §2.4 逐行核对。
 
@@ -178,6 +180,10 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 | 逐条核查记录（原文/AI/我的判断三区分） | `workflow/verification.md` |
 | issuescout 分析（issue #18018，真实 DeepSeek 输出） | `issuescout_run/scikit-learn__scikit-learn__18018.json` + 离线缓存构造说明 |
 | 知识提取（可复用经验） | `trace.md` |
+| **验收判据（正式化）与干净目录复跑** | `workflow/acceptance_criteria.md`、`workflow/clean_replay_20261031.md`（含可重放执行器） |
+| **玻尔回答反例审计（d=1/3 vs 1/√3）** | `workflow/bohrium_session/q1_audit.md` + `q1_audit_figure.png` |
+| **上一轮挑战复盘（方法论先验，全文导出）** | `workflow/prior_contest_retrospective.md` |
+| **issuescout 设计文档（v2 文本导出）** | `workflow/issuescout_design_notes.md` |
 
 ---
 
@@ -188,7 +194,7 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 - **论文**：© 2008 Laurens van der Maaten and Geoffrey Hinton，JMLR 开放获取。本仓库仅含**短片段引文与图表裁剪件**（核查用途，注明出处），不分发论文全文；全文请从 JMLR 官网获取。
 - **作者官方代码**（tsne_python.zip / tSNE_matlab.zip / mnist.zip / mnist_tsne.jpg）：来自 [lvdmaaten.github.io/tsne](https://lvdmaaten.github.io/tsne/)，按作者声明"free to use, restricted to non-commercial purposes"用于非商业核查；仓库内保留原始分发包以供溯源（`author_code/`），另有 `mnist_tsne.jpg`（作者自己的 MNIST 可视化）作为对照材料。
 - **scikit-learn**：BSD-3-Clause。参数对照基于本机安装的 1.9.1 源码；issue #18018 内容来自 GitHub 公开页面（抓取存档见 `issuescout_run/issue_18018_offline_cache.json`）。
-- **issuescout**：本分享作者开发的本地 issue 分析工具（DeepSeek 后端，源码未公开），本次为真实使用并完整留痕；本分享包含其真实输出与离线输入材料，读者无需该工具即可核查全部结论（`issuescout_run/`）。
+- **issuescout**：本分享作者开发的本地 issue 分析工具（DeepSeek 后端，源码未公开），本次为真实使用并完整留痕；本分享包含其真实输出与离线输入材料，读者无需该工具即可核查全部结论（`issuescout_run/`）。工具的设计原理已以文本导出形式公开（`workflow/issuescout_design_notes.md`），可部分弥补源码未公开对复核的影响。
 
 ### 4.2 本次个人贡献
 
@@ -218,6 +224,8 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 
 **实测结论（我的判断）**：玻尔科学空间在步骤①（原文锚定问答）上**可用且质量较高**——页码引用准确、会主动纠正提问预设、标注未验内容；但在图形形态与极值位置两个细节上出错，且都属"读者不查原文就发现不了"的类型。这恰好再次验证了本工作流的核心主张：**步骤②③（数值级验证）不可省略，无论 AI 在哪个平台上回答**。可复用的分工是"提问在玻尔（原文锚定问答），验证在脚本（有限差分+锚点校准）"——本分享 §3.2 的零网络脚本即为后一半的现成工具。
 
+**反例审计示例（步骤②③在玻尔回答上的落地）**：针对上述"d=1/3 极值位置"错误，`workflow/bohrium_session/q1_audit.md` 给出完整的反例审计——Fraction/代数推导（f'(d)∝1-3d² ⇒ 极值在 1/√3）、精确峰值 9/(4√3)=3√3/4≈1.2990/Z（玻尔的 1.30/Z 数值正确）、以及定量影响（照抄 d=1/3 会把峰值幅值低估 20.3%，且该处函数仍在上升段）；证据图 `workflow/bohrium_session/q1_audit_figure.png`。
+
 ### 4.4 玻尔迁移说明（补充）
 
 本流程全部步骤（论文 PDF 下载与裁剪、Figure 1 解析复现、MNIST 实验、issuescout 分析）都是标准 Python/Node 工作负载，可直接搬到玻尔的 Notebook 环境；本机曾受限的网络降级路径（OpenML/api.github.com 不可达）在玻尔环境通常不存在。玻尔环境如与本机产生结果差异（包版本不同），以 `results/` 内留存的原始输出为准对照排查——这也是把真实输出全部入库的原因。
@@ -230,3 +238,19 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 - **图复现之前先做公式级独立验证**（有限差分/解析极限），否则分不清"论文画错了"还是"我没读懂"（§2.3 的弹簧约定发现即源于此）。
 - 今天的 sklearn 默认参数是一条"论文→作者代码→社区 issue→后续论文"的演化链产物，不是对 2008 论文的直接实现；`init='random'` 和动量调度反而与论文逐字一致（§2.4）。
 - AI 读论文的正确姿势：**先验当假设、原文当法庭、数值当陪审团**（§2.1 的记忆纠错即本流程第一步）。
+
+---
+
+## 6. 方法论复盘：来自上一轮玻尔挑战的可迁移经验
+
+> 出处：作者在玻尔产品周赛第一季（论文阅读 Skill 挑战）的复盘文档，最终成绩 93.75/100，与榜首并列；经历 81.25 → 86.25 → 93.75 三段式提升与 28 次提交记录。复盘全文文本导出随包提供：`workflow/prior_contest_retrospective.md`。以下只摘录已在本挑战中**实际应用并产生效果**的可迁移经验，全部为本作者原创的方法论总结。
+
+| 周赛复盘中的教训 | 在本挑战中的对应应用 | 结果 |
+|---|---|---|
+| ① 提交通道与工具链先于内容：CLI 版本过旧、通道选错，评分段直接不产出 | 首次提交（Attempt 62235）重蹈了通道错误（平台 API 直传 vs Harbor worker），诊断为 `missing_worker_submission` 后升级 CLI 0.1.45 改走官方通道（§2.7） | 78→出分正常 |
+| ② 证据要"可读"不要"原始"：兆级 model-io 日志对 LLM 评审是噪音，人可读的会话导出体积降 98% 且可读性反升 | 本包的 AI 交互全部以人可读形态存档（提问原文+回答全文+页码锚点），不塞原始请求日志；玻尔回答以 DOM 逐字提取并注明提取方式 | 材料文本 174.8KiB 全部为可读内容 |
+| ③ 干净目录复跑 + 版本固定是可复现档位的关键 | v1.1.2 加入离线样本 npz 与版本固定的 requirements 后，执行了真预注册的干净目录复跑（断网 + 全新目录，C-R1/C-R2/C-R3 全 PASS，见 `workflow/clean_replay_20261031.md`） | 可复现声明从"本机验证"升级为"任意环境可重放" |
+| ④ 预注册 + 诚实记录是加分项：判据运行前锁定、把自家失误如实写进记录反而强化可信度 | `workflow/acceptance_criteria.md`（复跑判据真预注册；原实践判据正式化并明确标注非预注册）；本 README 保留了全部翻车记录（§2.1 记忆纠错、§2.3 弹簧约定、§2.7 零分提交、§4.3 玻尔回答两处错误） | —— |
+| ⑤ 归因用单变量对照，不要争论"是不是平台问题" | 对 62235（0 分）的归因：同包改通道重交即出分——单变量（通道）对照证实问题在提交方式而非内容 | §2.7 |
+
+**与上一轮挑战的差异声明**：两项挑战的评分维度不同（上一轮为 Skill 增益/复用/稳定性等六维，本轮为技术深度/复现/洞察/表达/玻尔生态五维），上一轮的分数拆解不可直接映射到本轮；可迁移的只有方法论。本文引用复盘内容已获作者授权（同一作者）。

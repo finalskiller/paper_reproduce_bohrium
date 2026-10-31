@@ -1,0 +1,29 @@
+=== C-R3 前置：网络已禁用（socket/create_connection/urlopen 全部替换为拦截器）===
+
+=== ① python code/fig1_reproduce.py ===
+① 退出码: 0
+
+=== ② python code/validate_gradients.py ===
+② 退出码: 0
+
+=== C-R1 判定 ===
+  scale==1.0: True | rho==2/9±0.01: True (rho=0.222222)
+  三条 exact PASS: {'sne:exact': True, 'unisne:exact': True, 'tsne:exact': True} | 最大相对误差 1.04e-08 (<1e-5: True)
+  spring 显式 FAIL 保留: True
+  C-R1: PASS
+
+=== ③ python code/fig2a_mnist.py（MNIST_SOURCE=sample）===
+③ 退出码: 0
+
+=== C-R2 判定 ===
+  A_paper_flavoured: KL 1.5138412714004517 vs 1.5138412714004517
+  B_sklearn_defaults: KL 1.5501009225845337 vs 1.5501009225845337
+  C-R2: PASS
+
+=== C-R3 判定 ===
+  全程被拦截的网络尝试次数: 0（脚本自身未发起任何合法网络请求）
+  C-R3: PASS
+
+=== 总结 ===
+  C-R1 PASS | C-R2 PASS | C-R3 PASS
+  失败清单: 无
