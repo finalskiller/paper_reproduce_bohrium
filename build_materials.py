@@ -70,6 +70,12 @@ SUBMISSION_NOTE = """作品链接：{url}
   fig2a_comparison.png(四方对照), fig2a_metrics.json, mnist_embedding_*.npy, mnist_sample_labels.npy
 - 作者官方实现核查副本:author_code/tsne_python.zip, tSNE_matlab.zip(原始分发包),
   tsne_python/tsne_python/tsne.py, tSNE_matlab/*.m(解包核对件), mnist_tsne.jpg(作者自渲染对照图)
+- **提示词存档(真实输入+按 run_log 重建的复现模板,两类明确区分)**:
+  workflow/prompts_used.md
+- **玻尔科学空间实测存档(2026-10-31,逐字)**: workflow/bohrium_session/q1_answer_verbatim.txt,
+  q2_answer_verbatim.txt;原文核查结果见 README §4.3(第 3 问未存档已如实声明)
+- **Figure 2(a) 输入样本离线副本**:author_code/mnist6000_sample.npz(6000x784 uint8+标签,
+  与原始运行抽样标签 6000/6000 顺序敏感核对一致;使三步复现全部可离线完成)
 - issuescout 真实分析(DeepSeek,12 次工具调用):issuescout_run/scikit-learn__scikit-learn__18018.json;
   输入与复现说明:issuescout_run/issue_18018_offline_cache.json, issuescout_run/README.md
 - 真实过程日志(含失败与降级路径):workflow/run_log.md;逐条核查记录(原文/AI/判断/实测四区分):
@@ -77,10 +83,10 @@ SUBMISSION_NOTE = """作品链接：{url}
 - 知识提取:trace.md
 - 容量说明:author_code/tsne_python/tsne_python/mnist2500_X.txt(约31MB纯文本,作者官方
   tsne_python.zip 解包所得的数据文件)自材料包排除——它与包内 author_code/tsne_python.zip
-  内容完全重复,且 fig2a_mnist.py 运行时自行按 README §3.2 下载数据、不读取该文件;
-  240KiB 文本预算无法容纳。完整文件在公开仓库同版本同路径可得,其 SHA256 见
-  workflow/checksums.txt;包内另保留 mnist2500_labels.txt 与三份 .npy 嵌入结果,
-  足以核验 Figure 2(a) 实验的输出结论。打包工具 build_materials.py 与所有者操作说明
+  内容完全重复,且 240KiB 文本预算无法容纳;完整文件在公开仓库同版本同路径可得,其 SHA256 见
+  workflow/checksums.txt。注意:该文件并非 fig2a 实验的输入(fig2a 用完整 60000 张训练集,
+  见 code/fig2a_mnist.py);实验所用 6000 张样本子集已以无损 npz 形式随包提供
+  (author_code/mnist6000_sample.npz,0.1MB 二进制),三步复现均可离线完成。打包工具 build_materials.py 与所有者操作说明
   PUBLISH.md 同样保留于公开仓库、不入材料包(非分享内容,故亦不在 checksums.txt 清单)。
 
 来源与贡献：

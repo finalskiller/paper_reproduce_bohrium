@@ -6,6 +6,8 @@
 - 对照实现：作者官方 Python 代码（lvdmaaten.github.io/tsne）与 scikit-learn 1.9.1（`sklearn.manifold.TSNE`）
 - 全部材料（证据裁剪件、代码、校准与验证记录、真实运行日志）：见下方[材料索引](#材料索引)
 
+> **10 分钟速读路径**：只看结论 → §2 各案例的黑体判断句；想自己核验 → §3.2 的①②两步（**零网络、零数据集依赖**，各 <10 秒）；想理解方法 → §1.2 的表 + §2.2 的校准推导；想看 AI 丢了什么 → §2.1 + §2.3。提示词存档在 `workflow/prompts_used.md`，逐条核查记录在 `workflow/verification.md`。
+
 ---
 
 ## 1. 问题与方法
@@ -104,12 +106,26 @@
 
 **观察**：① 两配置都完整复现论文级结构（~10 个数字簇清晰分离；1/7 相邻），四方对照图结构一致；② 两配置数值指标非常接近且**不同向**（A 的 KL/trustworthiness 略优，B 的 1-NN 略优，视觉上 B 的簇更干净、A 略有拉伸）——说明经过社区 15 年打磨的默认值与论文原始参数在这个基准上没有实质差别，"论文参数"并不神圣；③ 视觉模型对 A 给出 PARTIAL（簇间轻微桥接）与 A 的 KL 更低并存，提醒我们**单一指标（无论数值还是视觉）都不足以下结论**。论文原图无法数值对照（未发布坐标），此对照为结构级。
 
-### 2.6 局限（如实）
+### 2.6 五个案例的"难点→方法→设计理由→失效条件"对照
+
+| 案例（节） | 难点在哪个环节 | 方法核心 | 为什么这样设计 | 什么条件下失效 |
+|---|---|---|---|---|
+| 先验纠错（§2.1） | AI 先验记忆与原文冲突且不自知 | 先凭记忆作答→回原文核对→记录冲突 | 把 AI 记忆显式变成"可证伪的假设"，而不是直接采信或直接弃用 | 论文过于冷门时先验为空，此步退化为纯原文阅读（价值降低但不误导） |
+| Figure 1 反推（§2.2） | 正文未给作图参数（σ、ρ、归一化） | 解析构造+论文文字锚点联立求解 | 论文没写的不猜——锚点是论文自己背书的，可证伪 | 锚点少于自由参数个数时只能给参数族（本例 σ 即如此，靠敏感性分析兜底） |
+| 梯度验证（§2.3） | 分不清"图不对"是论文错还是我错 | 有限差分直接对代价函数求导 | 把"数学对不对"与"图对不对"彻底解耦，验证失败即定位到公式理解 | 代价函数不可微或维度爆炸时有限差分代价高，需换解析极限抽查 |
+| 参数漂移（§2.4） | 三个来源各说各话，无单一权威 | 三方逐项对照，页码/行号级证据 | 每行都有可点开的证据位置，读者可独立复核 | 库版本更新后行号会漂移（本表绑定 sklearn 1.9.1，换版本需重核） |
+| 社区溯源（§2.4 溯源段） | 漂移的"为什么"不在论文也不在源码 | issuescout 把 issue 讨论与源码落地关联 | 把"参数演化史"接到原始讨论与后续论文，形成证据链 | issue 讨论不可达时只能基于正文（本例评论缺失已在 §2.7 声明） |
+
+### 2.7 一次真实的提交失败与修正（挑战平台，2026-10-31）
+
+提交本作品到评分平台时发生的一次真实失败，按"不利证据保留"原则记录：第一次提交（Attempt 62235）走了平台 API 直传材料包——但该挑战实际由 Harbor worker 评分，直传的包**到不了 worker**，平台等待 30 分钟未收到回执后判 `missing_worker_submission` 计 0 分。诊断依据是平台的 `scoringDetails.source` 字段与挑战页自带提示（"…then the Harbor worker scores it"）；修正方法是改用官方 Playground CLI 提交（CLI 会把材料包直达 worker），第二次提交（Attempt 62237）4 分钟内正常评分。**教训**：提交通道也是工作流的一部分——评分器收不到的完美材料等于零分；修正后通道差异、两次回执均已留档。此案例与本工作流的方法论同构：先验证"证据能被核查方收到"，再谈内容质量。
+
+### 2.8 局限（如实）
 
 1. **Figure 1**：σ=1 是唯一无法从锚点识别的自由参数（锚点都位于 p∈{0,1} 的角点），已做敏感性说明；对定性结论（三种梯度的结构差异）无影响，因为它们对 (σ, ρ) 参数稳健。
 2. **Figure 2(a)**：论文未发布嵌入坐标，无法与原图做数值级对照，只做结构对照 + 我方两次运行的定量指标互比；论文用精确 t-SNE，本次用 Barnes-Hut 近似（论文一作 2014 年的加速工作）；sklearn 的 exaggeration 时长不可配置为论文的 50 次（固定 250）——这些偏差都已在参数表中标注。
 3. **issuescout 分析**基于 issue 正文（网页阅读器抓取）+ 本地 sklearn 1.9.1 源码快照；issue 的讨论评论未能离线获取（api.github.com 不可达，工具对评论拉取失败返回空并继续），分析基于正文的输入范围已在分析记录中体现。
-4. **玻尔科学空间**：本次实践未在玻尔平台执行（零生态分声明，不虚报）。附迁移指南见 §4.3。
+4. **玻尔科学空间**：已按 §4.3 完成真实问答实测（2/3 问存档，第 3 问因页面状态丢失未存档）；Notebook 实操未执行，迁移说明见 §4.4。
 
 ---
 
@@ -126,18 +142,22 @@ Node v24 + 本仓库 vendor 的 issuescout（仅 §2.4 溯源分析需要，可�
 ### 3.2 一键复现
 
 ```bash
-# ① Figure 1 解析复现 + 校准报告（<10 秒）
+# ① Figure 1 解析复现 + 校准报告（<10 秒｜零网络、零数据集——只要 numpy+matplotlib）
 python code/fig1_reproduce.py        # -> results/fig1_reproduction.png, fig1_calibration.json
 
-# ② 梯度公式有限差分验证（<10 秒）
+# ② 梯度公式有限差分验证（<10 秒｜零网络、零数据集——只要 numpy）
 python code/validate_gradients.py    # -> results/gradient_validation.json（应全 PASS）
 
-# ③ Figure 2(a) MNIST 双配置实验（含数据下载，分钟级）
+# ③ Figure 2(a) MNIST 双配置实验（分钟级）
+#    数据三选一：(a) 包内离线副本 author_code/mnist6000_sample.npz（默认优先，见加载器）；
+#    (b) 作者镜像 mnist.zip 自动下载；(c) OpenML（fetch_openml）
 python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2a_metrics.json
 
 # ④（可选）issuescout 对 sklearn issue #18018 的深度分析
 #    见 workflow/run_log.md §E：离线缓存构造 + npm run cli -- analyze 18018 <repo>
 ```
+
+**零网络复现路径（评审环境友好）**：①② 两步不访问网络、不需要任何数据集，是本分享核心结论（Figure 1 反推 + 梯度验证 + §2.3 发现）的完整可复现核心。③ 的输入样本已存为 `author_code/mnist6000_sample.npz`（6000×784 uint8 灰度级 + 标签，0.99MB）：样本子集与原始运行**逐标签核对一致**（6000/6000，顺序敏感），且加载器对原始 float32 输入做到**位级重建**（构建时断言 max diff = 0.0）；在本仓库记录的环境（Python 3.14.7 + scikit-learn 1.9.1 + numpy 2.5.4）离线重跑，六项指标（两配置的 KL / trustworthiness / 1-NN）与 `results/fig2a_metrics.json` 存档**完全一致**（KL 一致到小数点后 16 位）。重建与核验脚本：`code/make_mnist_sample_npz.py`。
 
 **结果检查**：② 中三行 `PASS`（相对误差 < 1e-5）；① 中校准输出 σ=1.0, ρ=0.211, s=1.0 且 SNE/UNI-SNE 的 max/min 与 §2.2 表一致；③ 的两幅嵌入图应呈现论文级结构（10 个数字簇清晰分离、1/7 与 3/5/8 的邻近关系）；参数对照打开 `code/parameter_drift.json` 与本 README §2.4 逐行核对。
 
@@ -146,9 +166,11 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 | 材料 | 位置 |
 |---|---|
 | 分享正文（本文件） | `README.md` |
+| **提示词存档（真实输入+重建模板）** | `workflow/prompts_used.md` |
 | 论文关键原文摘录（页码级） | `paper_evidence/excerpts/key_excerpts.md` |
 | 论文原图裁剪件（Figure 1 / 2 / 2a） | `paper_evidence/figures_paper/*.png`（出处均在文件名与 §来源） |
 | 作者官方代码（核查用副本+下载脚本） | `author_code/`（原始 zip 保留，解包件仅含 tsne.py 等核心文件） |
+| **Figure 2(a) 输入样本离线副本** | `author_code/mnist6000_sample.npz`（标签逐一核对 + 输入位级重建 + 离线重跑六项指标与存档完全一致） |
 | 复现代码 | `code/fig1_reproduce.py`, `code/validate_gradients.py`, `code/fig2a_mnist.py` |
 | 参数漂移对照表 | `code/parameter_drift.json` |
 | 复现输出（图/表/指标） | `results/` |
@@ -178,15 +200,27 @@ python code/fig2a_mnist.py           # -> results/fig2a_reproduction_*.png, fig2
 
 未包括在个人贡献内（如实声明）：论文本身、作者代码、scikit-learn、MNIST 数据集、Distill 博客与 Kobak & Linderman 论文的任何内容——它们只作为核查对象/引用。
 
-### 4.3 玻尔科学空间迁移指南（本分享未在玻尔执行，此为操作说明而非使用记录）
+### 4.3 玻尔科学空间实测记录（2026-10-31，真实执行）
 
-本流程全部步骤（论文 PDF 下载与裁剪、Figure 1 解析复现、MNIST 实验、issuescout 分析）都是标准 Python/Node 工作负载，可直接搬到玻尔科学空间的 Notebook 环境：
+**设定**：玻尔科学空间（www.bohrium.com，AI 问答），作者账号登录（孟科航），同一会话内对 t-SNE 论文连问三次，提问为 `workflow/prompts_used.md` §2 同款工作流问题。**逐字存档**：`workflow/bohrium_session/q1_answer_verbatim.txt`、`q2_answer_verbatim.txt`。第 3 问（结论外推条件）平台已完成回答，但页面会话状态随后丢失未及存档——如实声明，不补写。平台在第 1 问回答上标注了"查看来源 1: Visualizing Data using t-SNE"，即其检索到了论文原文。
 
-1. 在玻尔科学空间新建 Notebook（镜像选 pytorch/sklearn 系，含 numpy/matplotlib/scikit-learn）；
-2. 上传本仓库 `code/` 目录，逐格执行 §3.2 的三段脚本（MNIST 下载走 OpenML，玻尔网络可达，无需镜像降级）；
-3. 论文 PDF 与本仓库 `paper_evidence/` 一起上传，即可在格子里对照 `fig1_comparison.png` 核验；
-4. issuescout 步骤需 Node 环境与 DeepSeek Key，可用玻尔的 Web 终端跑 `npm run cli -- analyze ...`。
-玻尔环境如与本机产生结果差异（包版本不同），以 `results/` 内留存的原始输出为准对照排查——这也是把真实输出全部入库的原因。
+**第 1 问（Figure 1 斥力性质）的回答质量——原文核查结果**：
+
+| 玻尔的陈述 | 核查结论 | 依据 |
+|---|---|---|
+| 斥力有界、反平方长尾、位置 p.2586 Figure 1(c)，文字跨 2586–2587 | **正确** | 与 `paper_evidence/excerpts/key_excerpts.md` 的原文引文一致（"these repulsions do not go to infinity"，p.2586–2587） |
+| Eq.5 梯度式与引力/斥力拆解、斥力系数按 (1+d²)⁻² 衰减 | **正确** | 与论文 Eq.5 及代数推导一致 |
+| 三面板色标（SNE 0–18、UNI-SNE −4~14、t-SNE −1~1） | **数值正确** | 与原图色标及本分享 §2.2 校准值一致（SNE 端点 18/19 的措辞差异见 §2.2 的"互斥锚点"讨论） |
+| **"Figure 1 是一个三维曲面图……竖轴为梯度值"** | **错误** | 原图为**二维热图**（横轴高维距离、纵轴低维距离、颜色=梯度），见 `paper_evidence/figures_paper/fig1_paper_full.png`；其"竖轴"描述系虚构——但随后列出的面板色标数值又抄对了，属典型的"形态幻觉+数值正确"混合 |
+| **"矢量大小在 d=1/3 处取极大值 ≈1.30/Z"** | **位置错误，数值正确** | 对 4d/(Z(1+d²)²) 求导，极值在 d=1/√3≈0.577（数值验证峰值位置 0.5774），非 1/3；峰值大小 ≈1.30/Z 正确。值得肯定的是它自行标注了"这是我的求导结果，论文未给出"——来源区分意识好，但求导结果一半对一半错 |
+
+**第 2 问（MNIST 实验参数）的回答质量——原文核查结果**：八个参数（6000 张 / Perp=40 / exagg ×4 前 50 迭代 / T=1000 / 动量 0.5→0.8@250 / lr=100 Jacobs 自适应 / N(0,1e-4 I) / PCA→30）**逐项与 `code/parameter_drift.json` 的论文列一致**，页码标注（2587/2588/2589）全部正确。亮点：它**主动纠正了提问中的预设**——指出样本数与 perplexity 出自 §4.1/表 1，其余超参出自 §3.4 与 Algorithm 1（p.2587），并引证 "In all the visualizations presented in this paper and in the supporting material, we used exactly the same optimization procedure"——该引文经原文 PDF 逐字核验属实。这是一次"不丢条件"的正面样本。
+
+**实测结论（我的判断）**：玻尔科学空间在步骤①（原文锚定问答）上**可用且质量较高**——页码引用准确、会主动纠正提问预设、标注未验内容；但在图形形态与极值位置两个细节上出错，且都属"读者不查原文就发现不了"的类型。这恰好再次验证了本工作流的核心主张：**步骤②③（数值级验证）不可省略，无论 AI 在哪个平台上回答**。可复用的分工是"提问在玻尔（原文锚定问答），验证在脚本（有限差分+锚点校准）"——本分享 §3.2 的零网络脚本即为后一半的现成工具。
+
+### 4.4 玻尔迁移说明（补充）
+
+本流程全部步骤（论文 PDF 下载与裁剪、Figure 1 解析复现、MNIST 实验、issuescout 分析）都是标准 Python/Node 工作负载，可直接搬到玻尔的 Notebook 环境；本机曾受限的网络降级路径（OpenML/api.github.com 不可达）在玻尔环境通常不存在。玻尔环境如与本机产生结果差异（包版本不同），以 `results/` 内留存的原始输出为准对照排查——这也是把真实输出全部入库的原因。
 
 ---
 

@@ -72,3 +72,14 @@
 - mnist_tsne.jpg: `fa06de66cf3bed35d1ed4753c5adeac613b0c8842fcc41a6e58bda68ab502ec1`
 
 > 说明：本日志中所有"翻车"条目均为真实发生并修复的事件，保留它们是为了让读者复现时知道哪些坑是环境/方法本身的问题。
+
+---
+
+## H. 平台提交与 v1.0.1–v1.1（2026-10-30/31 补记）
+
+23. 首次提交（Playground 挑战 ai-github-98fdb6f0，Attempt 62235）走平台 API 直传——该挑战实际由 Harbor worker 评分，直传包未达 worker，30 分钟无回执后被判 `missing_worker_submission` 计 0 分（详见 README §2.7）。
+24. 修正：升级 Playground CLI 0.1.45 后经 CLI 重提交（Attempt 62237），4 分钟出分 78.0（harbor_reward 0.78，trace_factor 1.0）。
+25. v1.0.1/v1.0.2：校正 checksums.txt（4 项 CRLF 归一化差异 + 1 项过期哈希）并完善材料包打包规则（排除 mnist2500_X.txt 与 __MACOSX，提交说明加容量条目）。
+26. 复现价值强化：发现 fig2a_mnist.py 加载器注释错误（作者 mnist.zip 实为 [0,1] 的 256 级灰度，非 [0,255]）；构建 6000 样本无损离线副本 `author_code/mnist6000_sample.npz`（标签 6000/6000 顺序敏感核对 + float32 位级重建断言），沙盒离线重跑六项指标与原始存档完全一致（KL 一致到小数点后 16 位）。
+27. 玻尔科学空间实测（账号 孟科航）：同一会话对 t-SNE 论文三问，Q1/Q2 回答逐字存档 `workflow/bohrium_session/`；原文核查发现两处可验证错误（Figure 1 形态描述、矢量斥力极值位置），参数问答与本地对照表逐项一致——详见 README §4.3。第 3 问回答完成后页面会话状态丢失未及存档（如实声明）。
+28. v1.1：新增提示词存档（prompts_used.md）、离线样本包、README §2.6/§2.7/速读路径/玻尔实测记录。

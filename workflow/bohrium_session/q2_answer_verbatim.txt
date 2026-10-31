@@ -1,0 +1,165 @@
+<!--
+玻尔科学空间实测存档（原文逐字，未修改）
+平台: www.bohrium.com 玻尔科学空间（AI 问答）
+账号: 孟科航（用户本人登录）
+日期: 2026-10-31
+对话: 同一会话内多轮提问；本文为页面 DOM 提取的回答文本（含 AI 思考摘要与最终回答），
+      数学公式为页面渲染的线性化形式（可能存在排版重复，系提取方式所致，非原文差异）。
+平台侧标注: 第 1 问回答带"查看来源 1: Visualizing Data using t-SNE"（平台检索到论文原文）。
+-->
+
+论文的 MNIST 实验（第 4.1 节和表 1）用了哪些具体实验参数？请逐项列出：样本数、perplexity、early exaggeration 的倍数和持续迭代数、总迭代数 T、动量设置、学习率及其调度方式、初始解的分布、PCA 预降维的维度。请标注每个数值在论文的哪一页。
+
+已处理（用时 32s）
+结论先行
+
+§4.1 和表 1 本身只规定了 MNIST 的样本数与 perplexity；其余优化超参数（early exaggeration、T、动量、学习率、初始解）在论文中是全局统一的设置，写在 §3.4（p. 2587）和 Algorithm 1（p. 2587）中，作者明确声明“In all the visualizations presented in this paper and in the supporting material, we used exactly the same optimization procedure”，因此它们同样适用于 MNIST 实验，但出处不是 4.1 节。
+
+逐项参数与页码
+项目	论文取值	出处（印刷页 / PDF 页）
+样本数	6,000 张（从 MNIST 全部 60,000 张中随机抽取，理由是计算量）；每张 28×28 = 784 维	p. 2588 / PDF 第 10 页（§4.1）
+perplexity	Perp = 40（表 1 中 t-SNE 一行）	p. 2589 / PDF 第 11 页（表 1）
+early exaggeration 倍数	4（即把所有权重 
+𝑝
+𝑖
+𝑗
+p
+ij
+	​
+
+ 乘以 4）	p. 2587 / PDF 第 10 页（§3.4）
+early exaggeration 持续迭代	前 50 次迭代	p. 2587 / PDF 第 10 页（§3.4）
+总迭代数 
+𝑇
+T	1000 次梯度下降迭代	p. 2587 / PDF 第 10 页（§3.4）
+动量 
+𝛼
+(
+𝑡
+)
+α(t)	
+𝛼
+(
+𝑡
+)
+=
+0.5
+α(t)=0.5（
+𝑡
+<
+250
+t<250），
+𝛼
+(
+𝑡
+)
+=
+0.8
+α(t)=0.8（
+𝑡
+≥
+250
+t≥250）	p. 2587 / PDF 第 10 页（§3.4）
+学习率 
+𝜂
+η	初值 100；每次迭代后按 Jacobs (1988) 的自适应方案逐维更新（梯度方向稳定则逐步增大），不是全局衰减调度	p. 2587 / PDF 第 10 页（§3.4）
+初始解分布	从 
+𝑁
+(
+0
+,
+10
+−
+4
+𝐼
+)
+N(0,10
+−4
+I) 采样，即原点附近小方差各向同性高斯	p. 2587 / PDF 第 10 页（Algorithm 1）；文字版“isotropic Gaussian with small variance...centered around the origin”见 p. 2582
+PCA 预降维维度	30 维（所有实验统一，先 PCA 到 30 再用各方法降到 2 维）	p. 2589 / PDF 第 11 页（§4.2）
+几点需要留意的细节
+
+动量公式与初值配合。 更新式为 
+𝑌
+(
+𝑡
+)
+=
+𝑌
+(
+𝑡
+−
+1
+)
++
+𝜂
+ 
+∂
+𝐶
+/
+∂
+𝑌
++
+𝛼
+(
+𝑡
+)
+(
+𝑌
+(
+𝑡
+−
+1
+)
+−
+𝑌
+(
+𝑡
+−
+2
+)
+)
+Y
+(t)
+=Y
+(t−1)
++η∂C/∂Y+α
+(t)
+(Y
+(t−1)
+−Y
+(t−2)
+)，其中前 250 次迭代用小动量 0.5，对应 §3.4 开头“works best if the momentum term is small until the map points have become moderately well organized”的说法。
+
+early exaggeration 不在伪代码里。 论文自己加注：“note that early exaggeration is not included in the pseudocode in Algorithm 1”（p. 2587）。所以 Algorithm 1 与 Figure 2/3 的实际流程相差这一步，复现时容易漏掉。
+
+学习率没有“调度表”。 论文只给了初值 100 和“每次迭代后按 Jacobs (1988) 更新”，并未给出衰减率、下限或每维学习率的初值设定；这些细节在论文正文中缺失，需查作者公开的 MATLAB 实现。
+
+表 1 的其余行是对比方法的参数（p. 2589）：Sammon mapping 无代价函数参数（其优化用 Newton 法迭代 500 次）、Isomap 
+𝑘
+=
+12
+k=12、LLE 
+𝑘
+=
+12
+k=12。若做公平对比复现，这三个值要与 t-SNE 的 Perp=40 一并采用。
+
+论文未报告的项目：随机种子、随机抽取 6,000 张时的抽样方式（是否按类别分层）、重复运行次数与结果方差、perplexity 的敏感性实验（正文只在 p. 2583 泛泛地说 SNE 对 perplexity 较稳健、常用 5–50）。这些在论文中都找不到，不能从本文推定。
+
+易混淆点：§5 中 Figure 7 的随机游走 t-SNE 实验同样用“6,000 张随机抽取的 MNIST 数字”，但改用全部 60,000 张计算 
+𝑝
+𝑗
+∣
+𝑖
+p
+j∣i
+	​
+
+，且邻域图取 
+𝑘
+=
+20
+k=20；这不是 §4.1/表 1 的那组设置，引用时勿混用 
+1
+。

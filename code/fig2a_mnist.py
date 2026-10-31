@@ -40,17 +40,34 @@ PCA_DIM = 30
 
 
 def load_mnist():
-    """Load full MNIST. Source order controlled by env MNIST_SOURCE:
-    'author' (default here; the mirror lvdmaaten.github.io is reachable from
-    this network) or 'openml' (sklearn fetch_openml, blocked on some networks).
+    """Load MNIST. Source order controlled by env MNIST_SOURCE:
+    'sample'  (default when the packaged offline copy exists) — the exact 6,000-sample
+              subset used by the original run, author_code/mnist6000_sample.npz
+              (uint8 levels k, author values are k/255; loader reconstructs the
+              original float32 input bit-exactly — see code/make_mnist_sample_npz.py).
+              Returns already_sampled=True.
+    'author'  — the mirror lvdmaaten.github.io/tsne/code/mnist.zip (60,000 training
+              images; the 6,000-sample subset is then drawn with seed=42 in main()).
+              This is the path the ORIGINAL results were produced with (2026-10-23).
+    'openml'  — sklearn fetch_openml (blocked on some networks).
+    Returns (X, y, already_sampled).
     """
-    import os, zipfile, urllib.request, gzip, struct
+    import os, zipfile, urllib.request
+
+    here = os.path.dirname(os.path.abspath(__file__))
+    sample_npz = os.path.join(here, "..", "author_code", "mnist6000_sample.npz")
+    source = os.environ.get("MNIST_SOURCE", "sample")
+    if source == "sample" and os.path.exists(sample_npz):
+        z = np.load(sample_npz)
+        print("loading packaged offline sample:", os.path.normpath(sample_npz))
+        Xs = (z["X"].astype(np.float64) / 255.0).astype(np.float32)
+        return Xs, z["y"].astype(int), True
 
     cache = "data_cache/mnist_70000.npz"
     os.makedirs("data_cache", exist_ok=True)
     if os.path.exists(cache):
         z = np.load(cache)
-        return z["X"], z["y"]
+        return z["X"], z["y"], False
 
     source = os.environ.get("MNIST_SOURCE", "author")
     if source == "openml":
@@ -60,7 +77,7 @@ def load_mnist():
                              parser="liac-arff")
         X, y = bunch.data.astype(np.float32), bunch.target.astype(int)
         np.savez_compressed(cache, X=X, y=y)
-        return X, y
+        return X, y, False
 
     print("downloading MNIST from the author's mirror "
           "(lvdmaaten.github.io/tsne/code/mnist.zip) ...")
@@ -78,7 +95,7 @@ def load_mnist():
     X = m["train_X"].astype(np.float32)      # 60000 x 784, pixels in [0, 255]
     y = m["train_labels"].flatten().astype(int)
     np.savez_compressed(cache, X=X, y=y)
-    return X, y
+    return X, y, False
 
 
 def main():
@@ -90,12 +107,18 @@ def main():
     from sklearn.neighbors import KNeighborsClassifier
     from sklearn.model_selection import cross_val_score
 
-    X, y = load_mnist()
-    print("MNIST loaded:", X.shape)
+    X, y, already_sampled = load_mnist()
+    print("MNIST loaded:", X.shape, "| already the 6000-sample subset:", already_sampled)
 
     rng = np.random.default_rng(RNG_SEED)
-    idx = rng.choice(len(X), N_SAMPLES, replace=False)
-    Xs, ys = X[idx], y[idx]
+    if already_sampled:
+        # 打包样本即原始运行的 seed=42 子集（标签逐一核对一致），顺序保持原样，
+        # 不得重排——t-SNE/PCA 的结果依赖输入行序
+        assert len(X) == N_SAMPLES, f"packaged sample size {len(X)} != {N_SAMPLES}"
+        Xs, ys = X, y
+    else:
+        idx = rng.choice(len(X), N_SAMPLES, replace=False)
+        Xs, ys = X[idx], y[idx]
 
     t0 = time.time()
     Xp = PCA(n_components=PCA_DIM, random_state=RNG_SEED).fit_transform(Xs)
